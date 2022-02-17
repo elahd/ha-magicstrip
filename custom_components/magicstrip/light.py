@@ -31,7 +31,7 @@ async def async_setup_entry(
     def _constructor(device_state: DeviceState) -> list[Entity]:
         return [
             MagicStripLight(
-                device_state.coordinator, device_state.device, device_state.device_info, device_state.extra_state_attributes
+                device_state.coordinator, device_state.device, device_state.light_device_info, device_state.light_extra_state_attributes
             )
         ]
 
@@ -52,7 +52,6 @@ class MagicStripLight(CoordinatorEntity[MagicStripState], LightEntity):
         self._attr_extra_state_attributes = extra_state_attributes
         self._attr_name = device_info["default_name"]
         self._attr_icon:str = "mdi:led-strip-variant"
-        self._attr_assumed_state: bool = True
     
     # This device doesn't return color and brighrness statuses. If we pass None to Home Assistant, it will display
     # a light without brightness, color, or effect functions. To ensure that all functions are available, we substitute
@@ -87,6 +86,7 @@ class MagicStripLight(CoordinatorEntity[MagicStripState], LightEntity):
         
         if self.is_on:
             await self._device.toggle_power()
+            
         self.coordinator.async_set_updated_data(self._device.state)
         
     async def async_turn_on(self, **kwargs) -> None:
@@ -104,7 +104,7 @@ class MagicStripLight(CoordinatorEntity[MagicStripState], LightEntity):
                 
             if ATTR_EFFECT in kwargs and (effect := kwargs[ATTR_EFFECT]) != self.effect:
                 effect = None if effect == DEFAULT_EFFECT else effect
-                await self._device.set_effect(effect)
+                await self._device.set_effect_name(effect)
         except BleConnectionError as exc:
             raise UpdateFailed from exc
         

@@ -12,7 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo, Entity
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed, ConfigEntryNotReady
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -21,7 +21,7 @@ from homeassistant.helpers.dispatcher import (
 
 from pymagicstrip import MagicStripDevice, MagicStripState, device_filter
 from pymagicstrip.const import SERVICE_UUID
-from pymagicstrip.errors import BleTimeoutError, BleConnectionError
+from pymagicstrip.errors import BleTimeoutError
 
 from .const import DOMAIN, DISPATCH_DETECTION
 
@@ -31,7 +31,7 @@ import logging
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [Platform.LIGHT]
+PLATFORMS: list[Platform] = [Platform.LIGHT, Platform.NUMBER]
 
 @dataclass
 class DeviceState:
@@ -39,8 +39,10 @@ class DeviceState:
 
     device: MagicStripDevice
     coordinator: DataUpdateCoordinator[MagicStripState]
-    device_info: DeviceInfo
-    extra_state_attributes: MutableMapping[str, Any]
+    light_device_info: DeviceInfo
+    effect_speed_device_info: DeviceInfo
+    light_extra_state_attributes: MutableMapping[str, Any]
+    effect_speed_extra_state_attributes: MutableMapping[str, Any]
 
 
 @dataclass
@@ -60,7 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = state
 
     async def detection_callback(
-        ble_device: BLEDevice, advertisement_data: AdvertisementData
+        ble_device: BLEDevice, advertisement_data: AdvertisementData,
     ) -> None:
         if data := state.devices.get(ble_device.address):
             _LOGGER.debug(
@@ -104,17 +106,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             
             coordinator.async_set_updated_data(device.state)
 
-            device_info = DeviceInfo(
+            light_device_info = DeviceInfo(
                 identifiers={(DOMAIN, ble_device.address)},
                 default_name=f"MagicStrip LED ({ble_device.address})",
             )
             
-            extra_state_attributes: MutableMapping[str, Any] = {
+            effect_speed_device_info = DeviceInfo(
+                identifiers={(DOMAIN, ble_device.address)},
+                default_name=f"MagicStrip LED Effect Speed ({ble_device.address})",
+            )
+            
+            light_extra_state_attributes: MutableMapping[str, Any] = {
                 "integration": DOMAIN,
                 "signal_strength": device.state.connection_quality
             }
             
-            device_state = DeviceState(device, coordinator, device_info, extra_state_attributes)
+            effect_speed_extra_state_attributes: MutableMapping[str, Any] = {
+                "integration": DOMAIN
+            }
+            
+            device_state = DeviceState(device=device, coordinator=coordinator, light_device_info=light_device_info, effect_speed_device_info=effect_speed_device_info, light_extra_state_attributes=light_extra_state_attributes, effect_speed_extra_state_attributes=effect_speed_extra_state_attributes)
             state.devices[ble_device.address] = device_state
             async_dispatcher_send(
                 hass, f"{DISPATCH_DETECTION}.{entry.entry_id}", device_state
