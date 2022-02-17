@@ -1,5 +1,8 @@
 """The ha-magicstrip integration."""
 from __future__ import annotations
+
+import asyncio
+import logging
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any, Callable, MutableMapping
@@ -7,31 +10,26 @@ from typing import Any, Callable, MutableMapping
 from bleak import BleakScanner
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo, Entity
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-
+from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from pymagicstrip import MagicStripDevice, MagicStripState, device_filter
 from pymagicstrip.const import SERVICE_UUID
 from pymagicstrip.errors import BleTimeoutError
 
-from .const import DOMAIN, DISPATCH_DETECTION
-
-import asyncio
-
-import logging
+from .const import DISPATCH_DETECTION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.LIGHT, Platform.NUMBER]
+
 
 @dataclass
 class DeviceState:
@@ -52,9 +50,10 @@ class EntryState:
     scanner: BleakScanner
     devices: dict[str, DeviceState]
 
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up ha-magicstrip from a config entry."""
-    
+
     scanner = BleakScanner(filters={"UUIDs": [str(SERVICE_UUID)]})
 
     state = EntryState(scanner, {})
@@ -62,7 +61,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = state
 
     async def detection_callback(
-        ble_device: BLEDevice, advertisement_data: AdvertisementData,
+        ble_device: BLEDevice,
+        advertisement_data: AdvertisementData,
     ) -> None:
         if data := state.devices.get(ble_device.address):
             _LOGGER.debug(
@@ -80,11 +80,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
 
             device = MagicStripDevice(ble_device)
-            
+
             try:
                 await device.detection_callback(ble_device, advertisement_data)
             except (BleTimeoutError, UpdateFailed) as exc:
-                _LOGGER.error("Timed out when connecting to device. Will try again later. Error: %s", exc)
+                _LOGGER.error(
+                    "Timed out when connecting to device. Will try again later. Error: %s",
+                    exc,
+                )
 
             async def async_update_data():
                 """Handle an explicit update request."""
@@ -92,8 +95,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     _LOGGER.debug("Updating data...")
                     await device.update()
                     _LOGGER.debug("Updated data: %s", device.state)
-                except (asyncio.TimeoutError, BleTimeoutError, asyncio.exceptions.TimeoutError) as exc:
-                    raise UpdateFailed(f"Timeout communicating with device: {exc}") from exc
+                except (
+                    asyncio.TimeoutError,
+                    BleTimeoutError,
+                    asyncio.exceptions.TimeoutError,
+                ) as exc:
+                    raise UpdateFailed(
+                        f"Timeout communicating with device: {exc}"
+                    ) from exc
                 return device.state
 
             coordinator: DataUpdateCoordinator[MagicStripState] = DataUpdateCoordinator(
@@ -103,29 +112,36 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 update_interval=timedelta(seconds=120),
                 update_method=async_update_data,
             )
-            
+
             coordinator.async_set_updated_data(device.state)
 
             light_device_info = DeviceInfo(
                 identifiers={(DOMAIN, ble_device.address)},
                 default_name=f"MagicStrip LED ({ble_device.address})",
             )
-            
+
             effect_speed_device_info = DeviceInfo(
                 identifiers={(DOMAIN, ble_device.address)},
                 default_name=f"MagicStrip LED Effect Speed ({ble_device.address})",
             )
-            
+
             light_extra_state_attributes: MutableMapping[str, Any] = {
                 "integration": DOMAIN,
-                "signal_strength": device.state.connection_quality
+                "signal_strength": device.state.connection_quality,
             }
-            
+
             effect_speed_extra_state_attributes: MutableMapping[str, Any] = {
                 "integration": DOMAIN
             }
-            
-            device_state = DeviceState(device=device, coordinator=coordinator, light_device_info=light_device_info, effect_speed_device_info=effect_speed_device_info, light_extra_state_attributes=light_extra_state_attributes, effect_speed_extra_state_attributes=effect_speed_extra_state_attributes)
+
+            device_state = DeviceState(
+                device=device,
+                coordinator=coordinator,
+                light_device_info=light_device_info,
+                effect_speed_device_info=effect_speed_device_info,
+                light_extra_state_attributes=light_extra_state_attributes,
+                effect_speed_extra_state_attributes=effect_speed_extra_state_attributes,
+            )
             state.devices[ble_device.address] = device_state
             async_dispatcher_send(
                 hass, f"{DISPATCH_DETECTION}.{entry.entry_id}", device_state
@@ -137,12 +153,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
+
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
 
 @callback
 def async_setup_entry_platform(

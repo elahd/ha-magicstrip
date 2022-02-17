@@ -10,9 +10,7 @@
   "zeroconf": [],
   "homekit": {},
   "dependencies": [],
-  "codeowners": [
-    "@elahd"
-  ],
+  "codeowners": ["@elahd"],
   "iot_class": "local_polling",
   "version": "0.0.1"
 }
