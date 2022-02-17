@@ -2,15 +2,13 @@
   "domain": "magicstrip",
   "name": "ha-magicstrip",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/magicstrip",
-  "requirements": [
-    "git+https://github.com/elahd/pymagicstrip#pymagicstrip==0.1"
-  ],
+  "documentation": "https://www.github.com/elahd/ha-magicstrip",
+  "requirements": ["pymagicstrip==0.1.0"],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
   "dependencies": [],
   "codeowners": ["@elahd"],
   "iot_class": "local_polling",
-  "version": "0.0.1"
+  "version": "0.1.0"
 }
