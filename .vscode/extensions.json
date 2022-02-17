@@ -1,0 +1,11 @@
+{
+  "recommendations": [
+    "ms-python.vscode-pylance",
+    "esbenp.prettier-vscode",
+    "github.vscode-pull-request-github",
+    "bungcip.better-toml",
+    "donjayamanne.python-extension-pack",
+    "marklarah.pre-commit-vscode",
+    "magicstack.magicpython"
+  ]
+}
