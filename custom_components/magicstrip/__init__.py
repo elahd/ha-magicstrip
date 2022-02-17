@@ -10,9 +10,11 @@ from typing import Any, Callable, MutableMapping
 from bleak import BleakScanner
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
+from bleak.exc import BleakDBusError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -88,6 +90,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     "Timed out when connecting to device. Will try again later. Error: %s",
                     exc,
                 )
+            except (BleakDBusError) as exc:
+                _LOGGER.error(
+                    "Error communicating with device. Is the device too far away from your Bluetooth controller?"
+                )
+                raise ConfigEntryNotReady from exc
 
             async def async_update_data():
                 """Handle an explicit update request."""
