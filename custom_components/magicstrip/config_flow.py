@@ -31,19 +31,10 @@ async def _async_has_devices(hass: HomeAssistant) -> bool:
         if device_filter(device, advertisement_data):
             event.set()
 
-    async with BleakScanner(
+    scanner = bluetooth.async_get_scanner(hass)
+
+    await scanner.discover(
         detection_callback=detection, filters={"UUIDs": [str(SERVICE_UUID)]}
-    ):
-
-        _LOGGER.debug("Scanning for devices...")
-
-        try:
-            async with async_timeout.timeout(CONST_WAIT_TIME):
-                await event.wait()
-        except asyncio.TimeoutError:
-            return False
-
-    return True
-
+    )
 
 register_discovery_flow(DOMAIN, "MagicStrip", _async_has_devices)
