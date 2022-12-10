@@ -65,7 +65,7 @@ class MagicStripEffectSpeed(CoordinatorEntity[MagicStripState], NumberEntity):
         self._attr_icon = "mdi:speedometer"
 
     @property
-    def value(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the entity value to represent the entity state."""
         if data := self.coordinator.data:
             speed = DEFAULT_SPEED if not data.effect_speed else data.effect_speed
@@ -77,7 +77,7 @@ class MagicStripEffectSpeed(CoordinatorEntity[MagicStripState], NumberEntity):
 
         return None
 
-    async def async_set_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
 
         rebased_speed = int((255 * value) / 100)
