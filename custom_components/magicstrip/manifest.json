@@ -3,7 +3,7 @@
   "name": "ha-magicstrip",
   "config_flow": true,
   "documentation": "https://www.github.com/elahd/ha-magicstrip",
-  "requirements": ["pymagicstrip==0.1.0"],
+  "requirements": ["pip@git+https://github.com/elahd/pymagicstrip#main"],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
