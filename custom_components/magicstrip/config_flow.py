@@ -4,10 +4,9 @@ from __future__ import annotations
 import asyncio
 import logging
 
-import async_timeout
-from bleak import BleakScanner
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
+from homeassistant.components import bluetooth
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_flow import register_discovery_flow
 from pymagicstrip import device_filter
@@ -27,7 +26,7 @@ async def _async_has_devices(hass: HomeAssistant) -> bool:
     event = asyncio.Event()
 
     def detection(device: BLEDevice, advertisement_data: AdvertisementData):
-        _LOGGER.debug("Detected device: {} {}", device.address, device.rssi)
+        _LOGGER.debug("Detected device: %s %s", device.address, device.rssi)
         if device_filter(device, advertisement_data):
             event.set()
 
@@ -36,5 +35,8 @@ async def _async_has_devices(hass: HomeAssistant) -> bool:
     await scanner.discover(
         detection_callback=detection, filters={"UUIDs": [str(SERVICE_UUID)]}
     )
+
+    return True
+
 
 register_discovery_flow(DOMAIN, "MagicStrip", _async_has_devices)

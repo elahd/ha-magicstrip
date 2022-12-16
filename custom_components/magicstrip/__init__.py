@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 import asyncio
-import logging
+from collections.abc import Callable
+from collections.abc import MutableMapping
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any, Callable, MutableMapping
+import logging
+from typing import Any
 
 from bleak import BleakScanner
 from bleak.backends.device import BLEDevice
@@ -13,20 +15,24 @@ from bleak.backends.scanner import AdvertisementData
 from bleak.exc import BleakDBusError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from pymagicstrip import MagicStripDevice, MagicStripState, device_filter
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import UpdateFailed
+from pymagicstrip import device_filter
+from pymagicstrip import MagicStripDevice
+from pymagicstrip import MagicStripState
 from pymagicstrip.const import SERVICE_UUID
 from pymagicstrip.errors import BleTimeoutError
 
-from .const import DISPATCH_DETECTION, DOMAIN
+from .const import DISPATCH_DETECTION
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

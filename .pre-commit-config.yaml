@@ -1,32 +1,33 @@
----
-# https://pypi.org/project/python-typing-update/ was causing trouble. Some of the below items seek to re-implement the typing-update flow.
+# https://pypi.org/project/python-typing-update/ doesn't work with python 3.10. Some of the below items seek to re-implement the typing-update flow.
 
-default_language_version:
-  python: python3.9
+ci:
+  skip: [pylint]
+
 repos:
-  - repo: https://github.com/asottile/reorder_python_imports
-    rev: v2.6.0
-    hooks:
-      - id: reorder-python-imports
-        args:
-          - --py39-plus
-        files: ^(homeassistant|script|tests|custom_components)/.+\.py$
-        stages: [manual]
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.31.0
+    rev: v3.3.1
     hooks:
       - id: pyupgrade
         args: [--py39-plus]
+  - repo: https://github.com/sqlalchemyorg/zimports/
+    rev: v0.6.0
+    hooks:
+      - id: zimports
+  - repo: https://github.com/myint/autoflake/
+    rev: v2.0.0
+    hooks:
+      - id: autoflake
+        files: ^(tests|custom_components)/.+\.py$
   - repo: https://github.com/psf/black
-    rev: 21.12b0
+    rev: 22.12.0
     hooks:
       - id: black
         args:
           - --safe
           - --quiet
-        files: ^(homeassistant|script|tests|custom_components)/.+\.py$
+        files: ^(tests|custom_components)/.+\.py$
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.1.0
+    rev: v2.2.2
     hooks:
       - id: codespell
         args:
@@ -34,38 +35,30 @@ repos:
           - --skip="./.*,*.csv,*.json"
           - --quiet-level=2
         exclude_types: [csv, json]
-  - repo: https://gitlab.com/pycqa/flake8
-    rev: 3.9.2
+  - repo: https://github.com/PyCQA/flake8
+    rev: 6.0.0
     hooks:
       - id: flake8
         additional_dependencies:
           - flake8-docstrings==1.5.0
           - pydocstyle==5.1.1
-        files: ^(homeassistant|script|tests|custom_components)/.+\.py$
-  - repo: https://github.com/myint/autoflake/
-    rev: v1.4
-    hooks:
-      - id: autoflake
-        args:
-          - --remove-all-unused-imports
-        files: ^(homeassistant|script|tests|custom_components)/.+\.py$
+        files: ^(tests|custom_components)/.+\.py$
   - repo: https://github.com/PyCQA/bandit
-    rev: 1.7.1
+    rev: 1.7.4
     hooks:
       - id: bandit
         args:
           - --quiet
           - --format=custom
-          # - --configfile=pyproject.toml
           - --exclude=examples
-        files: ^(homeassistant|script|tests|custom_components)/.+\.py$
-  - repo: https://github.com/pre-commit/mirrors-isort
-    rev: v5.10.1
+        files: ^(tests|custom_components)/.+\.py$
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.28.0
     hooks:
-      - id: isort
-        args: ["--profile", "black"]
+      - id: yamllint
+        exclude: (.vscode|.devcontainer|pylint|.github)
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.1.0
+    rev: v4.4.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
@@ -74,12 +67,24 @@ repos:
       - id: check-json
         exclude: (.vscode|.devcontainer)
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v0.931
+    rev: v0.991
     hooks:
       - id: mypy
+        exclude: (.vscode|.devcontainer|pylint)
         additional_dependencies: [types-all]
-  - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v2.5.1
+  - repo: https://github.com/pappasam/toml-sort
+    rev: v0.20.1
     hooks:
-      - id: prettier
-        # stages: [manual]
+      - id: toml-sort
+  - repo: local
+    hooks:
+      - id: pylint
+        name: pylint
+        entry: pylint
+        language: system
+        types: [python]
+        exclude: (.vscode|.devcontainer|.mypy_cache|custom_components/alarmdotcom/__pycache__|pylint)
+        args:
+          - --output-format=colorized
+          - -d W0511
+          - --fail-on=all
