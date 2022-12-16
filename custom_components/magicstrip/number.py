@@ -1,21 +1,23 @@
 """MagicStrip number entity implementation. Use to adjust effect speed."""
 from __future__ import annotations
 
+from collections.abc import MutableMapping
 import logging
-from typing import Any, MutableMapping
+from typing import Any
 
 from homeassistant.components.number import NumberEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
-from pymagicstrip import MagicStripDevice, MagicStripState
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from pymagicstrip import MagicStripDevice
+from pymagicstrip import MagicStripState
 
-from . import DeviceState, async_setup_entry_platform
+from . import async_setup_entry_platform
+from . import DeviceState
 from .const import DEFAULT_SPEED
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,7 +43,7 @@ async def async_setup_entry(
     async_setup_entry_platform(hass, config_entry, async_add_entities, _constructor)
 
 
-class MagicStripEffectSpeed(CoordinatorEntity[MagicStripState], NumberEntity):
+class MagicStripEffectSpeed(CoordinatorEntity[MagicStripState], NumberEntity):  # type: ignore
     """Slider for setting effect speed."""
 
     def __init__(
@@ -65,7 +67,7 @@ class MagicStripEffectSpeed(CoordinatorEntity[MagicStripState], NumberEntity):
         self._attr_icon = "mdi:speedometer"
 
     @property
-    def value(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the entity value to represent the entity state."""
         if data := self.coordinator.data:
             speed = DEFAULT_SPEED if not data.effect_speed else data.effect_speed
@@ -77,7 +79,7 @@ class MagicStripEffectSpeed(CoordinatorEntity[MagicStripState], NumberEntity):
 
         return None
 
-    async def async_set_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
 
         rebased_speed = int((255 * value) / 100)

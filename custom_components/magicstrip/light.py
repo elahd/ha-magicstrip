@@ -2,33 +2,35 @@
 
 from __future__ import annotations
 
+from collections.abc import MutableMapping
 import logging
-from typing import Any, MutableMapping
+from typing import Any
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    ATTR_EFFECT,
-    ATTR_RGB_COLOR,
-    COLOR_MODE_RGB,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_EFFECT,
-    LightEntity,
-)
+from homeassistant.components.light import ATTR_BRIGHTNESS
+from homeassistant.components.light import ATTR_EFFECT
+from homeassistant.components.light import ATTR_RGB_COLOR
+from homeassistant.components.light import COLOR_MODE_RGB
+from homeassistant.components.light import LightEntity
+from homeassistant.components.light import SUPPORT_BRIGHTNESS
+from homeassistant.components.light import SUPPORT_COLOR
+from homeassistant.components.light import SUPPORT_EFFECT
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
-from pymagicstrip import MagicStripDevice, MagicStripState
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import UpdateFailed
+from pymagicstrip import MagicStripDevice
+from pymagicstrip import MagicStripState
 from pymagicstrip.errors import BleConnectionError
 
-from . import DeviceState, async_setup_entry_platform
-from .const import DEFAULT_BRIGHTNESS, DEFAULT_COLOR, DEFAULT_EFFECT
+from . import async_setup_entry_platform
+from . import DeviceState
+from .const import DEFAULT_BRIGHTNESS
+from .const import DEFAULT_COLOR
+from .const import DEFAULT_EFFECT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,7 +55,7 @@ async def async_setup_entry(
     async_setup_entry_platform(hass, config_entry, async_add_entities, _constructor)
 
 
-class MagicStripLight(CoordinatorEntity[MagicStripState], LightEntity):
+class MagicStripLight(CoordinatorEntity[MagicStripState], LightEntity):  # type: ignore
     """MagicStrip light entity."""
 
     def __init__(
@@ -111,12 +113,14 @@ class MagicStripLight(CoordinatorEntity[MagicStripState], LightEntity):
     @property
     def is_on(self) -> bool | None:
         """Return True if entity is on."""
-        if data := self.coordinator.data:
-            return data.on
 
-        return None
+        data: MagicStripState = self.coordinator.data
 
-    async def async_turn_off(self, **kwargs) -> None:
+        on_state: bool = data.on
+
+        return on_state
+
+    async def async_turn_off(self, **kwargs) -> None:  # type: ignore
         """Turn device off."""
 
         if self.is_on:
@@ -124,7 +128,7 @@ class MagicStripLight(CoordinatorEntity[MagicStripState], LightEntity):
 
         self.coordinator.async_set_updated_data(self._device.state)
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs) -> None:  # type: ignore
         """Turn device on."""
 
         try:

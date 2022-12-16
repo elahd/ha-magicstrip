@@ -1,0 +1,54 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools", "wheel"]
+
+[tool.bandit]
+tests = ["B103","B108","B306","B307","B313","B314","B315","B316","B317","B318","B319","B320","B325","B601","B602","B604","B608","B609"]
+
+[tool.black]
+exclude = 'generated'
+line-length = 88
+target-version = ["py39"]
+
+[tool.mypy]
+check_untyped_defs = true
+disallow_incomplete_defs = true
+disallow_subclassing_any = true
+disallow_untyped_calls = true
+disallow_untyped_decorators = true
+disallow_untyped_defs = true
+follow_imports = "silent"
+ignore_missing_imports = true
+no_implicit_optional = true
+pretty = true
+python_version = "3.9"
+show_absolute_path = true
+show_error_codes = true
+show_error_context = true
+strict_equality = true
+warn_incomplete_stub = true
+warn_redundant_casts = true
+warn_return_any = true
+warn_unreachable = true
+warn_unused_configs = true
+warn_unused_ignores = true
+
+[tool.pytest.ini_options]
+norecursedirs = [
+    ".git",
+    "testing_config",
+]
+testpaths = [
+    "tests",
+]
+
+[tool.tomlsort]
+all = false
+check = false
+ignore_case = true
+in_place = true
+no_header = false
+
+[tool.zimports]
+black-line-length = 88
+keep-unused-type-checking = true
